@@ -302,6 +302,19 @@ function toast(msg) {
 document.getElementById("jdInput").addEventListener("keydown", function(e) {
   if (e.key === "Enter" && e.ctrlKey) optimize();
 });
+
+// ---------- localStorage: 持久化 API Key ----------
+(function() {
+  var keyInput = document.getElementById('apiKey');
+  // 页面加载时恢复
+  var saved = localStorage.getItem('ds_api_key');
+  if (saved) keyInput.value = saved;
+  // 输入时自动保存
+  keyInput.addEventListener('input', function() {
+    localStorage.setItem('ds_api_key', keyInput.value.trim());
+  });
+})();
+
 </script>
 </body>
 </html>
