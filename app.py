@@ -1,18 +1,75 @@
-import os
+﻿import os
 import json
 import uuid
 import time
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, session
 import requests
+import pdfplumber
+import tempfile
 
 app = Flask(__name__)
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24).hex())
 
 HISTORY_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "history")
 os.makedirs(HISTORY_DIR, exist_ok=True)
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
+
+
+INTERVIEW_QUESTIONS_PROMPT = """你是一个资深面试官，现在你要面试一位候选人。
+
+请根据下方岗位 JD，生成 10 个面试问题。
+
+## 问题要求
+1. 覆盖三个维度：
+   - 【业务理解】：考察候选人对行业、公司、岗位业务的理解深度
+   - 【项目说明】：深挖候选人简历中的项目细节，考察真实参与度
+   - 【匹配度】：考察候选人与岗位的契合点，why you / why this role
+2. 每个问题前标注所属维度标签
+3. 问题必须具体、有针对性，结合 JD 中的关键要求来设计
+4. 不要泛泛而谈的「你最大的缺点是什么」之类的问题
+
+## 输出格式
+严格按以下格式输出 10 个问题，每个问题一行：
+
+1.【业务理解】xxxxx
+2.【项目说明】xxxxx
+3.【匹配度】xxxxx
+...
+10.【匹配度】xxxxx
+
+不要输出任何解释、开场白或结束语，只输出 10 个问题。
+"""
+
+POLISH_ANSWERS_PROMPT = """你是一个资深面试教练。候选人已经针对某岗位的 10 道面试题给出了原始回答，请你逐一评审并润色。
+
+## 评审维度
+1. 是否太散？—— 回答是否有清晰的结构和主线，还是想到哪说到哪
+2. 是否传递了岗位匹配度？—— 经历和 JD 是否自然对齐
+3. 是否像真正做过这岗位的人？—— 有没有具体细节、量化数据、决策逻辑
+
+## 润色规则
+1. 不编造经历，只优化表述方式和结构
+2. 让回答更结构化：先给结论 → 再用 STAR 法则展开 → 最后点回岗位
+3. 自动对齐 JD 关键词（仅在回答里已有相关经历时）
+4. 每道回答控制在 150-300 字
+5. 保持原回答的核心意思和真实经历
+
+## 输出格式
+只输出润色后的 10 道答案终稿，格式如下：
+
+### 1.【维度】问题原文
+**回答：**（润色后的内容）
+
+### 2.【维度】问题原文
+**回答：**（润色后的内容）
+
+...
+不要输出评审过程、评分或任何额外解释。
+"""
+
 
 SYSTEM_PROMPT = """﻿你是一个资深的简历优化专家。用户会提供：
 1. 原始简历（包含教育背景、实习经历、项目经历、技能等）
@@ -79,7 +136,7 @@ LangChain、LangGraph、Milvus、Dots.OCR、RAGAS、Qwen3-VL、vllm
 """
 
 
-def call_deepseek(api_key: str, resume: str, jd: str) -> str:
+def call_deepseek(api_key: str, system_prompt: str, user_message: str, max_tokens: int = 4096) -> str:
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
@@ -87,11 +144,11 @@ def call_deepseek(api_key: str, resume: str, jd: str) -> str:
     payload = {
         "model": "deepseek-chat",
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"## 原始简历\n\n{resume}\n\n## 目标岗位JD\n\n{jd}"}
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message}
         ],
         "temperature": 0.3,
-        "max_tokens": 4096
+        "max_tokens": max_tokens
     }
     resp = requests.post(DEEPSEEK_URL, headers=headers, json=payload, timeout=120)
     if resp.status_code != 200:
@@ -120,7 +177,7 @@ def optimize():
         return jsonify({"error": "请输入岗位 JD"}), 400
 
     try:
-        result = call_deepseek(api_key, resume, jd)
+        result = call_deepseek(api_key, SYSTEM_PROMPT, f"## 原始简历\n\n{resume}\n\n## 目标岗位JD\n\n{jd}")
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 502
     except Exception as e:
@@ -139,6 +196,106 @@ def optimize():
         json.dump(record, f, ensure_ascii=False, indent=2)
 
     return jsonify({"result": result, "id": record["id"]})
+
+
+@app.route("/api/parse-pdf", methods=["POST"])
+def parse_pdf():
+    """上传PDF简历，提取文本内容返回"""
+    if "file" not in request.files:
+        return jsonify({"error": "请上传PDF文件"}), 400
+
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "文件名为空"}), 400
+    if not file.filename.lower().endswith(".pdf"):
+        return jsonify({"error": "仅支持PDF格式"}), 400
+
+    # 保存临时文件
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    try:
+        file.save(tmp.name)
+        tmp.close()
+
+        # 用pdfplumber提取文本
+        text_parts = []
+        page_count = 0
+        with pdfplumber.open(tmp.name) as pdf:
+            page_count = len(pdf.pages)
+            for page in pdf.pages:
+                t = page.extract_text()
+                if t:
+                    text_parts.append(t)
+
+        full_text = "\n".join(text_parts).strip()
+
+        if not full_text or len(full_text) < 20:
+            return jsonify({
+                "text": "",
+                "warning": f"检测到 {page_count} 页，但提取文本过短。该PDF可能是扫描版（图片），请手动粘贴文本内容。"
+            }), 200
+
+        return jsonify({"text": full_text, "pages": page_count}), 200
+
+    except Exception as e:
+        return jsonify({"error": f"PDF解析失败: {str(e)}"}), 500
+    finally:
+        try:
+            os.unlink(tmp.name)
+        except Exception:
+            pass
+
+@app.route("/api/generate-questions", methods=["POST"])
+def generate_questions():
+    """基于JD生成10道面试题"""
+    data = request.get_json()
+    api_key = data.get("api_key", "").strip()
+    jd = data.get("jd", "").strip()
+
+    if not api_key:
+        return jsonify({"error": "请输入 DeepSeek API Key"}), 400
+    if not jd:
+        return jsonify({"error": "请先在右侧输入岗位 JD"}), 400
+
+    try:
+        result = call_deepseek(api_key, INTERVIEW_QUESTIONS_PROMPT, f"## 目标岗位JD\n\n{jd}", max_tokens=2048)
+    except RuntimeError as e:
+        return jsonify({"error": str(e)}), 502
+    except Exception as e:
+        return jsonify({"error": f"请求异常: {str(e)}"}), 500
+
+    # 解析问题列表
+    questions = [q.strip() for q in result.strip().split("\n") if q.strip() and q.strip()[0].isdigit()]
+    return jsonify({"questions": questions, "raw": result})
+
+
+@app.route("/api/polish-answers", methods=["POST"])
+def polish_answers():
+    """评审并润色用户的面试回答"""
+    data = request.get_json()
+    api_key = data.get("api_key", "").strip()
+    questions = data.get("questions", [])
+    answers = data.get("answers", [])
+
+    if not api_key:
+        return jsonify({"error": "请输入 DeepSeek API Key"}), 400
+    if not questions or not answers:
+        return jsonify({"error": "问题和回答不能为空"}), 400
+
+    # 组装用户消息
+    qa_pairs = []
+    for i, (q, a) in enumerate(zip(questions, answers), 1):
+        qa_pairs.append(f"{i}. {q}\n原始回答：{a}")
+    user_message = "## 面试题及候选人原始回答\n\n" + "\n\n".join(qa_pairs)
+
+    try:
+        result = call_deepseek(api_key, POLISH_ANSWERS_PROMPT, user_message, max_tokens=4096)
+    except RuntimeError as e:
+        return jsonify({"error": str(e)}), 502
+    except Exception as e:
+        return jsonify({"error": f"请求异常: {str(e)}"}), 500
+
+    return jsonify({"result": result})
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

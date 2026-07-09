@@ -105,6 +105,90 @@
     padding-right: 4px;
   }
 
+
+  /* PDF upload button */
+  .pdf-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 12px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--accent);
+    border: 1px solid rgba(255,107,107,0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition);
+    text-transform: none;
+    letter-spacing: 0;
+    user-select: none;
+  }
+  .pdf-upload-btn:hover {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+  }
+  .pdf-upload-btn.uploading {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  .upload-status {
+    font-size: 0.72rem;
+    margin-left: 8px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .upload-status.ok { color: var(--success); }
+  .upload-status.warn { color: #f0c040; }
+  .upload-status.err { color: var(--accent); }
+
+
+  /* ── session bar ── */
+  .session-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 10px 8px 16px;
+    margin-bottom: 20px;
+  }
+  .session-bar select {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 0.8rem;
+    outline: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .session-bar select option { background: var(--surface); color: var(--text); }
+  .session-badge {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .session-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    font-family: inherit;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+  .session-btn.save { color: var(--success); border: 1px solid rgba(78,205,196,0.3); background: transparent; }
+  .session-btn.save:hover { background: rgba(78,205,196,0.1); border-color: var(--success); }
+  .session-btn.del  { color: var(--accent);  border: 1px solid rgba(255,107,107,0.2); background: transparent; }
+  .session-btn.del:hover  { background: var(--accent-glow); border-color: var(--accent); }
+
   /* ── main layout ── */
   .grid {
     display: grid;
@@ -316,6 +400,90 @@
     to { opacity: 0; }
   }
 
+
+  /* ── interview section ── */
+  .interview-section {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .interview-section h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .section-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+  .interview-step {
+    margin-bottom: 20px;
+  }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover {
+    background: var(--surface-hover);
+    border-color: rgba(255,107,107,0.4);
+    box-shadow: 0 4px 16px var(--accent-glow);
+  }
+  .question-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 14px;
+  }
+  .question-block .q-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .question-block .q-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .q-tag.biz { background: rgba(78,205,196,0.15); color: var(--success); }
+  .q-tag.proj { background: rgba(255,107,107,0.15); color: var(--accent); }
+  .q-tag.match { background: rgba(160,140,255,0.15); color: #a08cff; }
+  .question-block textarea {
+    width: 100%;
+    min-height: 80px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.85rem;
+    font-family: inherit;
+    line-height: 1.6;
+    padding: 10px 12px;
+    resize: vertical;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  .question-block textarea:focus {
+    border-color: rgba(255,107,107,0.4);
+  }
+  .question-block textarea::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.4;
+  }
+  .interview-result {
+    margin-top: 12px;
+  }
+
   /* ── match badge ── */
   .match-badge {
     display: none;
@@ -341,10 +509,32 @@
     <input type="password" id="apiKey" placeholder="输入你的 DeepSeek API Key..." autocomplete="off">
   </div>
 
+    <!-- API Key help -->
+  <div style="text-align:center; margin-top:-16px; margin-bottom:20px;">
+    <span style="font-size:0.72rem; color:var(--text-secondary);">
+      🔑 还没有 Key？去 <a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--accent); text-decoration:none;">platform.deepseek.com</a> 免费注册获取 →
+    </span>
+  </div>
+
+  <div class="session-bar">
+    <span class="session-badge">💼 会话</span>
+    <select id="sessionSelect" onchange="loadSession()">
+      <option value="">选择已保存的会话...</option>
+    </select>
+    <button class="session-btn save" onclick="saveSession()">💾 保存</button>
+    <button class="session-btn del" onclick="deleteSession()">🗑 删除</button>
+  </div>
+
   <!-- Input Grid -->
   <div class="grid">
     <div class="card">
-      <div class="card-label">📄 我的简历</div>
+      <div class="card-label">
+      📄 我的简历
+      <label class="pdf-upload-btn" for="pdfFileInput" title="上传PDF简历自动提取文本">📎 上传PDF</label>
+      <input type="file" id="pdfFileInput" accept=".pdf" style="display:none">
+      <span class="upload-status" id="uploadStatus"></span>
+
+    </div>
       <textarea id="resumeInput" placeholder="粘贴你的简历内容...
 
 例如：
@@ -382,6 +572,42 @@
     </div>
     <div class="output-body" id="outputBody"></div>
   </div>
+  
+  <!-- ====== 面试模拟模块 ====== -->
+  <section class="interview-section">
+    <h2>🎤 面试模拟</h2>
+    <p class="section-desc">基于JD生成面试题 → 逐题作答 → AI评审润色 → 输出答案终稿</p>
+
+    <!-- Step 1: 生成题目 -->
+    <div class="interview-step" id="stepGenerate">
+      <button class="btn btn-secondary" id="genQuestionsBtn" onclick="generateQuestions()">
+        <span class="spinner"></span>
+        <span class="btn-text">🎤 生成 10 道面试题</span>
+      </button>
+    </div>
+
+    <!-- Step 2: 作答 -->
+    <div class="interview-step" id="stepAnswer" style="display:none;">
+      <div id="questionsContainer"></div>
+      <div class="action-row">
+        <button class="btn btn-secondary" id="polishBtn" onclick="polishAnswers()">
+          <span class="spinner"></span>
+          <span class="btn-text">✨ 评审并润色，输出答案终稿</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: 结果 -->
+    <div class="interview-step" id="stepResult" style="display:none;">
+      <div class="output-card interview-result">
+        <div class="output-header">
+          <span class="output-title">📋 答案终稿</span>
+          <button class="copy-btn" id="copyInterviewBtn" onclick="copyInterviewResult()">复制</button>
+        </div>
+        <div class="output-body" id="interviewResultBody"></div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <script>
@@ -446,6 +672,277 @@ function toast(msg) {
 document.getElementById("jdInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && e.ctrlKey) optimize();
 });
+
+// PDF upload
+document.getElementById("pdfFileInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const btn = document.querySelector(".pdf-upload-btn");
+  const status = document.getElementById("uploadStatus");
+  btn.classList.add("uploading");
+  btn.textContent = "⏳ 解析中...";
+  status.textContent = "";
+  status.className = "upload-status";
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const resp = await fetch("/api/parse-pdf", { method: "POST", body: formData });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      status.textContent = "❌ " + (data.error || "解析失败");
+      status.className = "upload-status err";
+      return;
+    }
+
+    if (data.warning) {
+      status.textContent = "⚠ " + data.warning;
+      status.className = "upload-status warn";
+    } else if (data.text) {
+      document.getElementById("resumeInput").value = data.text;
+      status.textContent = "✓ " + data.pages + "页 提取成功";
+      status.className = "upload-status ok";
+    }
+  } catch (err) {
+    status.textContent = "❌ 网络错误";
+    status.className = "upload-status err";
+  } finally {
+    btn.classList.remove("uploading");
+    btn.textContent = "📎 上传PDF";
+    e.target.value = "";
+  }
+});
+
+
+// ══════ 面试模拟模块 ══════
+var interviewQuestions = [];
+
+function getTagClass(q) {
+  if (q.includes('业务理解')) return 'biz';
+  if (q.includes('项目说明')) return 'proj';
+  if (q.includes('匹配度')) return 'match';
+  return 'biz';
+}
+
+function getTagLabel(q) {
+  if (q.includes('业务理解')) return '业务理解';
+  if (q.includes('项目说明')) return '项目说明';
+  if (q.includes('匹配度')) return '匹配度';
+  return '';
+}
+
+async function generateQuestions() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const jd = document.getElementById('jdInput').value.trim();
+  const btn = document.getElementById('genQuestionsBtn');
+
+  if (!apiKey) return toast('请先输入 DeepSeek API Key');
+  if (!jd) return toast('请先在右侧输入岗位 JD');
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  try {
+    const resp = await fetch('/api/generate-questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: apiKey, jd })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || '请求失败');
+
+    interviewQuestions = data.questions;
+    renderQuestions(interviewQuestions);
+    document.getElementById('stepGenerate').style.display = 'none';
+    document.getElementById('stepAnswer').style.display = 'block';
+  } catch (e) {
+    toast(e.message);
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+function renderQuestions(questions) {
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = questions.map((q, i) => {
+    const tag = getTagLabel(q);
+    const tagClass = getTagClass(q);
+    const qClean = q.replace(/^\d+\.\s*/, '').replace(/【.*?】\s*/, '');
+    return '<div class=\"question-block\">' +
+      '<div class=\"q-label\"><span class=\"q-tag ' + tagClass + '\">' + tag + '</span>' + (i+1) + '. ' + escapeHtml(qClean) + '</div>' +
+      '<textarea id=\"answer_' + i + '\" placeholder=\"在此输入你的回答...\"></textarea>' +
+      '</div>';
+  }).join('');
+  document.getElementById('stepResult').style.display = 'none';
+}
+
+async function polishAnswers() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const btn = document.getElementById('polishBtn');
+  const answers = interviewQuestions.map((_, i) => {
+    return document.getElementById('answer_' + i).value.trim();
+  });
+
+  const hasAnswer = answers.some(a => a !== '');
+  if (!hasAnswer) return toast('请至少填写一道题的回答');
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  try {
+    const resp = await fetch('/api/polish-answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: apiKey, questions: interviewQuestions, answers })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || '请求失败');
+
+    document.getElementById('interviewResultBody').textContent = data.result;
+    document.getElementById('stepResult').style.display = 'block';
+    document.getElementById('stepResult').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    toast(e.message);
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+async function copyInterviewResult() {
+  const text = document.getElementById('interviewResultBody').textContent;
+  if (!text) return;
+  await navigator.clipboard.writeText(text);
+  const btn = document.getElementById('copyInterviewBtn');
+  btn.textContent = '已复制 ✓';
+  btn.classList.add('copied');
+  setTimeout(() => {
+    btn.textContent = '复制';
+    btn.classList.remove('copied');
+  }, 1800);
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ══════ 会话管理（最多5份完整快照） ══════
+const SESSION_KEY = 'codex_sessions';
+const MAX_SESSIONS = 5;
+const API_KEY_STORE = 'codex_apikey';
+
+// --- API Key 持久化 ---
+(function() {
+  const saved = localStorage.getItem(API_KEY_STORE);
+  if (saved) document.getElementById('apiKey').value = saved;
+  document.getElementById('apiKey').addEventListener('blur', function() {
+    localStorage.setItem(API_KEY_STORE, this.value.trim());
+  });
+})();
+
+// --- 会话 CRUD ---
+function getSessions() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function setSessions(list) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(list));
+}
+
+function refreshSessionSelect() {
+  const list = getSessions();
+  const sel = document.getElementById('sessionSelect');
+  sel.innerHTML = '<option value=\"\">选择已保存的会话... (' + list.length + '/' + MAX_SESSIONS + ')</option>';
+  list.forEach((s, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    const d = new Date(s.time);
+    opt.textContent = s.label + ' — ' + d.getMonth()+1 + '/' + d.getDate() + ' ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+    sel.appendChild(opt);
+  });
+}
+
+function snapshotAll() {
+  return {
+    resume: document.getElementById('resumeInput').value,
+    jd: document.getElementById('jdInput').value,
+    optimizedResult: document.getElementById('outputBody').textContent || '',
+    questions: window.interviewQuestions || [],
+    answers: (window.interviewQuestions || []).map((_, i) => {
+      const el = document.getElementById('answer_' + i);
+      return el ? el.value : '';
+    }),
+    polishedResult: document.getElementById('interviewResultBody').textContent || ''
+  };
+}
+
+function saveSession() {
+  const snap = snapshotAll();
+  if (!snap.resume && !snap.jd) return toast('请先填写简历或JD');
+
+  let list = getSessions();
+  if (list.length >= MAX_SESSIONS) list.shift();
+  const label = prompt('会话名称（如：字节后端面试准备）：', '会话 ' + (list.length + 1));
+  if (label === null) return;
+  list.push({ label: label || '会话', time: new Date().toISOString(), ...snap });
+  setSessions(list);
+  refreshSessionSelect();
+  toast('✅ 已保存：' + label);
+}
+
+function loadSession() {
+  const sel = document.getElementById('sessionSelect');
+  const idx = parseInt(sel.value);
+  if (isNaN(idx)) return;
+  const list = getSessions();
+  const s = list[idx];
+  if (!s) return;
+
+  document.getElementById('resumeInput').value = s.resume || '';
+  document.getElementById('jdInput').value = s.jd || '';
+
+  const outputBody = document.getElementById('outputBody');
+  if (s.optimizedResult) {
+    outputBody.textContent = s.optimizedResult;
+    outputBody.classList.remove('loading-placeholder');
+  } else { outputBody.textContent = ''; }
+
+  if (s.questions && s.questions.length > 0) {
+    interviewQuestions = s.questions;
+    renderQuestions(s.questions);
+    if (s.answers) s.answers.forEach((ans, i) => {
+      const el = document.getElementById('answer_' + i);
+      if (el) el.value = ans;
+    });
+    document.getElementById('stepGenerate').style.display = 'none';
+    document.getElementById('stepAnswer').style.display = 'block';
+  }
+
+  if (s.polishedResult) {
+    document.getElementById('interviewResultBody').textContent = s.polishedResult;
+    document.getElementById('stepResult').style.display = 'block';
+  }
+
+  toast('📋 已加载：' + s.label);
+}
+
+function deleteSession() {
+  const sel = document.getElementById('sessionSelect');
+  const idx = parseInt(sel.value);
+  if (isNaN(idx)) return;
+  let list = getSessions();
+  const name = list[idx].label;
+  list.splice(idx, 1);
+  setSessions(list);
+  refreshSessionSelect();
+  toast('🗑 已删除：' + name);
+}
+
+refreshSessionSelect();
 </script>
 </body>
 </html>
